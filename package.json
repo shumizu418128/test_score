@@ -2,7 +2,7 @@
   "name": "test_score",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://shumisatoshi.github.io/test_score/",
+  "homepage": "https://shumizu418128.github.io/test_score/",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
