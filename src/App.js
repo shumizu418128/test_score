@@ -2,28 +2,43 @@ import { useEffect, useState } from 'react';
 import './App.css';
 
 const TestScoringApp = () => {
-  // デフォルトの問題構成（言語知識・読解）
+  // デフォルトの問題構成（文法）
+  const defaultGrammarStructure = {
+    1: 5, 2: 5, 3: 5, 4: 7, 5: 5, 6: 5, 7: 12, 8: 5, 9: 5
+  };
+
+  // デフォルトの問題構成（読解）
   const defaultReadingStructure = {
-    1: 5, 2: 5, 3: 5, 4: 7, 5: 5, 6: 5, 7: 12, 8: 5, 9: 5, 10: 5, 11: 9, 12: 2, 13: 3, 14: 2
+    10: 5, 11: 9, 12: 2, 13: 3, 14: 2
   };
 
   // 聴解の問題構成
   const defaultListeningStructure = {
-    1: 5, 2: 6, 3: 1, 4: 1, 5: 4
+    1: 6, 2: 5, 3: 5, 4: 11, 5: 4
   };
 
   // 現在のタブ
-  const [activeTab, setActiveTab] = useState('reading');
+  const [activeTab, setActiveTab] = useState('grammar');
 
   // 問題グループごとの問題数
+  const [grammarStructure, setGrammarStructure] = useState(defaultGrammarStructure);
   const [readingStructure, setReadingStructure] = useState(defaultReadingStructure);
   const [listeningStructure, setListeningStructure] = useState(defaultListeningStructure);
 
   // 問題の並び順を管理する状態
+  const [grammarOrder, setGrammarOrder] = useState(Object.keys(defaultGrammarStructure).map(Number));
   const [readingOrder, setReadingOrder] = useState(Object.keys(defaultReadingStructure).map(Number));
   const [listeningOrder, setListeningOrder] = useState(Object.keys(defaultListeningStructure).map(Number));
 
   // 問題グループの色を管理する状態
+  const [grammarColors, setGrammarColors] = useState(() => {
+    const colors = {};
+    Object.keys(defaultGrammarStructure).forEach((num, index) => {
+      colors[num] = getColorByIndex(index);
+    });
+    return colors;
+  });
+
   const [readingColors, setReadingColors] = useState(() => {
     const colors = {};
     Object.keys(defaultReadingStructure).forEach((num, index) => {
@@ -47,7 +62,7 @@ const TestScoringApp = () => {
   }
 
   // 問題データの生成関数
-  const generateQuestions = (structure) => {
+  const generateQuestions = (structure, section = 'reading') => {
     let questions = [];
     let idCounter = 1;
     let subNumberCounter = 1;
@@ -55,6 +70,24 @@ const TestScoringApp = () => {
     Object.entries(structure).forEach(([groupNumber, count]) => {
       const groupNum = parseInt(groupNumber);
       for (let i = 0; i < count; i++) {
+        // デフォルトの配点を設定
+        let defaultPoints = 1;
+        if (section === 'reading') {
+          if ([3, 6, 10].includes(groupNum)) {
+            defaultPoints = 2;
+          } else if ([11, 12, 13].includes(groupNum)) {
+            defaultPoints = 3;
+          } else if (groupNum === 14) {
+            defaultPoints = 4;
+          }
+        } else if (section === 'listening') {
+          if ([1, 3, 5].includes(groupNum)) {
+            defaultPoints = 3;
+          } else if (groupNum === 2) {
+            defaultPoints = 2;
+          }
+        }
+
         questions.push({
           id: idCounter++,
           number: groupNum,
@@ -63,7 +96,7 @@ const TestScoringApp = () => {
           userAnswer: '',
           score: 0,
           isCorrect: false,
-          points: 1
+          points: defaultPoints
         });
       }
     });
@@ -72,12 +105,19 @@ const TestScoringApp = () => {
   };
 
   // 問題データの初期状態
-  const [readingQuestions, setReadingQuestions] = useState(() => generateQuestions(defaultReadingStructure));
-  const [listeningQuestions, setListeningQuestions] = useState(() => generateQuestions(defaultListeningStructure));
+  const [grammarQuestions, setGrammarQuestions] = useState(() => generateQuestions(defaultGrammarStructure, 'grammar'));
+  const [readingQuestions, setReadingQuestions] = useState(() => generateQuestions(defaultReadingStructure, 'reading'));
+  const [listeningQuestions, setListeningQuestions] = useState(() => generateQuestions(defaultListeningStructure, 'listening'));
 
   // 総合得点の状態
   const [totalScore, setTotalScore] = useState(0);
   const [maxPossibleScore, setMaxPossibleScore] = useState(0);
+  const [grammarScore, setGrammarScore] = useState(0);
+  const [grammarMaxScore, setGrammarMaxScore] = useState(0);
+  const [readingScore, setReadingScore] = useState(0);
+  const [readingMaxScore, setReadingMaxScore] = useState(0);
+  const [listeningScore, setListeningScore] = useState(0);
+  const [listeningMaxScore, setListeningMaxScore] = useState(0);
   const [showQuestionManager, setShowQuestionManager] = useState(false);
 
   // 回答が変更されたときの処理
@@ -164,7 +204,7 @@ const TestScoringApp = () => {
     }
 
     // 問題データを再生成
-    const newQuestions = generateQuestions(newStructure);
+    const newQuestions = generateQuestions(newStructure, section);
 
     // 既存の回答と正解をできるだけ保持
     const updatedQuestions = newQuestions.map(newQ => {
@@ -216,9 +256,9 @@ const TestScoringApp = () => {
     setReadingOrder([...readingOrder, nextGroupNumber]);
     setListeningOrder([...listeningOrder, nextGroupNumber]);
     if (section === 'reading') {
-      setReadingQuestions(generateQuestions(newStructure));
+      setReadingQuestions(generateQuestions(newStructure, 'reading'));
     } else {
-      setListeningQuestions(generateQuestions(newStructure));
+      setListeningQuestions(generateQuestions(newStructure, 'listening'));
     }
   };
 
@@ -247,9 +287,9 @@ const TestScoringApp = () => {
     setReadingOrder(newOrder);
     setListeningOrder(newOrder);
     if (section === 'reading') {
-      setReadingQuestions(generateQuestions(newStructure));
+      setReadingQuestions(generateQuestions(newStructure, 'reading'));
     } else {
-      setListeningQuestions(generateQuestions(newStructure));
+      setListeningQuestions(generateQuestions(newStructure, 'listening'));
     }
   };
 
@@ -292,22 +332,30 @@ const TestScoringApp = () => {
       setListeningColors(newColors);
     }
     if (section === 'reading') {
-      setReadingQuestions(generateQuestions(defaultReadingStructure));
+      setReadingQuestions(generateQuestions(defaultReadingStructure, 'reading'));
     } else {
-      setListeningQuestions(generateQuestions(defaultListeningStructure));
+      setListeningQuestions(generateQuestions(defaultListeningStructure, 'listening'));
     }
   };
 
   // 合計得点の計算
   useEffect(() => {
+    const grammarTotal = grammarQuestions.reduce((sum, q) => sum + q.score, 0);
     const readingTotal = readingQuestions.reduce((sum, q) => sum + q.score, 0);
     const listeningTotal = listeningQuestions.reduce((sum, q) => sum + q.score, 0);
-    setTotalScore(readingTotal + listeningTotal);
+    setTotalScore(grammarTotal + readingTotal + listeningTotal);
+    setGrammarScore(grammarTotal);
+    setReadingScore(readingTotal);
+    setListeningScore(listeningTotal);
 
+    const grammarMax = grammarQuestions.reduce((sum, q) => sum + q.points, 0);
     const readingMax = readingQuestions.reduce((sum, q) => sum + q.points, 0);
     const listeningMax = listeningQuestions.reduce((sum, q) => sum + q.points, 0);
-    setMaxPossibleScore(readingMax + listeningMax);
-  }, [readingQuestions, listeningQuestions]);
+    setMaxPossibleScore(grammarMax + readingMax + listeningMax);
+    setGrammarMaxScore(grammarMax);
+    setReadingMaxScore(readingMax);
+    setListeningMaxScore(listeningMax);
+  }, [grammarQuestions, readingQuestions, listeningQuestions]);
 
   // 大問の並び替え
   const moveQuestionGroup = (fromIndex, toIndex, section) => {
@@ -322,6 +370,15 @@ const TestScoringApp = () => {
   };
 
   // 問題ごとにグループ化
+  const grammarGroups = grammarQuestions.reduce((groups, question) => {
+    const { number } = question;
+    if (!groups[number]) {
+      groups[number] = [];
+    }
+    groups[number].push(question);
+    return groups;
+  }, {});
+
   const readingGroups = readingQuestions.reduce((groups, question) => {
     const { number } = question;
     if (!groups[number]) {
@@ -374,7 +431,7 @@ const TestScoringApp = () => {
             let globalQuestionNumber = 1;
             return order.map((groupNumber, index) => (
               groups[groupNumber].map((question, qIndex) => {
-                const currentNumber = section === 'reading' ? globalQuestionNumber++ : qIndex + 1;
+                const currentNumber = section === 'reading' ? (groupNumber + 1) : (section === 'grammar' ? globalQuestionNumber++ : qIndex + 1);
                 return (
                   <tr
                     key={question.id}
@@ -386,7 +443,7 @@ const TestScoringApp = () => {
                         rowSpan={groups[groupNumber].length}
                         style={{ backgroundColor: colors[groupNumber] }}
                       >
-                        問題 {index + 1}
+                        問題 {section === 'reading' ? (groupNumber + 1) : groupNumber}
                         <div className="text-sm mt-1">
                           {calculateGroupScore(groupNumber, section)} / {calculateGroupMaxScore(groupNumber, section)}点
                         </div>
@@ -437,12 +494,12 @@ const TestScoringApp = () => {
   const QuestionManager = () => (
     <div className="mb-6 p-4 border border-gray-300 rounded-lg">
       <div className="mb-4 text-center">
-        <h2 className="text-2xl font-bold">{activeTab === 'reading' ? '言語知識・読解' : '聴解'}</h2>
+        <h2 className="text-2xl font-bold">{activeTab === 'reading' ? '言語知識・読解' : activeTab === 'grammar' ? '文法' : '聴解'}</h2>
       </div>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold">大問設定</h2>
         <button
-          onClick={() => resetToDefault(activeTab)}
+          onClick={() => resetToDefault(activeTab === 'reading' ? 'reading' : activeTab === 'grammar' ? 'grammar' : 'listening')}
           className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
         >
           デフォルトに戻す
@@ -450,23 +507,23 @@ const TestScoringApp = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-3">
-        {(activeTab === 'reading' ? readingOrder : listeningOrder).map((groupNumber, index) => (
+        {(activeTab === 'reading' ? readingOrder : activeTab === 'grammar' ? grammarOrder : listeningOrder).map((groupNumber, index) => (
           <div
             key={groupNumber}
             className="flex items-center justify-between p-2 border rounded"
-            style={{ backgroundColor: activeTab === 'reading' ? readingColors[groupNumber] : listeningColors[groupNumber] }}
+            style={{ backgroundColor: activeTab === 'reading' ? readingColors[groupNumber] : activeTab === 'grammar' ? grammarColors[groupNumber] : listeningColors[groupNumber] }}
           >
             <div className="flex items-center gap-2">
               <button
-                onClick={() => moveQuestionGroup(index, Math.max(0, index - 1), activeTab)}
+                onClick={() => moveQuestionGroup(index, Math.max(0, index - 1), activeTab === 'reading' ? 'reading' : activeTab === 'grammar' ? 'grammar' : 'listening')}
                 disabled={index === 0}
                 className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm disabled:opacity-0"
               >
                 ↑
               </button>
               <button
-                onClick={() => moveQuestionGroup(index, Math.min((activeTab === 'reading' ? readingOrder : listeningOrder).length - 1, index + 1), activeTab)}
-                disabled={index === (activeTab === 'reading' ? readingOrder : listeningOrder).length - 1}
+                onClick={() => moveQuestionGroup(index, Math.min((activeTab === 'reading' ? readingOrder : activeTab === 'grammar' ? grammarOrder : listeningOrder).length - 1, index + 1), activeTab === 'reading' ? 'reading' : activeTab === 'grammar' ? 'grammar' : 'listening')}
+                disabled={index === (activeTab === 'reading' ? readingOrder : activeTab === 'grammar' ? grammarOrder : listeningOrder).length - 1}
                 className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm disabled:opacity-0"
               >
                 ↓
@@ -478,12 +535,12 @@ const TestScoringApp = () => {
               <input
                 type="number"
                 min="1"
-                value={activeTab === 'reading' ? readingStructure[groupNumber] : listeningStructure[groupNumber]}
-                onChange={(e) => handleQuestionCountChange(groupNumber, e.target.value, activeTab)}
+                value={activeTab === 'reading' ? readingStructure[groupNumber] : activeTab === 'grammar' ? grammarStructure[groupNumber] : listeningStructure[groupNumber]}
+                onChange={(e) => handleQuestionCountChange(groupNumber, e.target.value, activeTab === 'reading' ? 'reading' : activeTab === 'grammar' ? 'grammar' : 'listening')}
                 className="border border-gray-300 rounded px-2 py-1 w-16 mr-2"
               />
               <button
-                onClick={() => removeQuestionGroup(groupNumber, activeTab)}
+                onClick={() => removeQuestionGroup(groupNumber, activeTab === 'reading' ? 'reading' : activeTab === 'grammar' ? 'grammar' : 'listening')}
                 className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
               >
                 削除
@@ -494,7 +551,7 @@ const TestScoringApp = () => {
       </div>
 
       <button
-        onClick={() => addQuestionGroup(activeTab)}
+        onClick={() => addQuestionGroup(activeTab === 'reading' ? 'reading' : activeTab === 'grammar' ? 'grammar' : 'listening')}
         className="mt-4 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
       >
         問題を追加
@@ -506,13 +563,27 @@ const TestScoringApp = () => {
     <div className="p-4 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-4 text-center">テスト採点システム</h1>
 
-      <div className="mb-6 bg-gray-100 p-4 rounded-lg flex flex-wrap items-center justify-between">
-        <div>
-          <span className="font-bold">合計得点: </span>
-          <span className="text-xl">{totalScore} / {maxPossibleScore}</span>
+      <div className="mb-6 bg-gray-100 p-4 rounded-lg">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <span className="font-bold">総合得点: </span>
+            <span className="text-xl">{totalScore} / {maxPossibleScore}</span>
+          </div>
+          <div>
+            <span className="font-bold">文法: </span>
+            <span className="text-xl">{grammarScore} / {grammarMaxScore}</span>
+          </div>
+          <div>
+            <span className="font-bold">読解: </span>
+            <span className="text-xl">{readingScore} / {readingMaxScore}</span>
+          </div>
+          <div>
+            <span className="font-bold">聴解: </span>
+            <span className="text-xl">{listeningScore} / {listeningMaxScore}</span>
+          </div>
         </div>
 
-        <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
+        <div className="flex flex-wrap gap-2 mt-4">
           <button
             onClick={() => setShowQuestionManager(!showQuestionManager)}
             className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600"
@@ -534,10 +605,16 @@ const TestScoringApp = () => {
       <div className="mb-4">
         <div className="flex border-b">
           <button
+            className={`px-4 py-2 ${activeTab === 'grammar' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            onClick={() => setActiveTab('grammar')}
+          >
+            文法
+          </button>
+          <button
             className={`px-4 py-2 ${activeTab === 'reading' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
             onClick={() => setActiveTab('reading')}
           >
-            言語知識・読解
+            読解
           </button>
           <button
             className={`px-4 py-2 ${activeTab === 'listening' ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
@@ -548,7 +625,15 @@ const TestScoringApp = () => {
         </div>
       </div>
 
-      {activeTab === 'reading' ? (
+      {activeTab === 'grammar' ? (
+        <QuestionTable
+          questions={grammarQuestions}
+          groups={grammarGroups}
+          order={grammarOrder}
+          colors={grammarColors}
+          section="grammar"
+        />
+      ) : activeTab === 'reading' ? (
         <QuestionTable
           questions={readingQuestions}
           groups={readingGroups}
