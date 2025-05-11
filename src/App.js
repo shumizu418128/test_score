@@ -160,6 +160,7 @@ const TestScoringApp = () => {
       ...questionColors,
       [nextGroupNumber]: getColorByIndex(Object.keys(newStructure).length - 1)
     });
+    setQuestionOrder([...questionOrder, nextGroupNumber]);
     setQuestions(generateQuestions(newStructure));
   };
 
@@ -175,8 +176,12 @@ const TestScoringApp = () => {
     const newColors = { ...questionColors };
     delete newColors[groupNumber];
 
+    // questionOrderから削除する大問番号を除外
+    const newOrder = questionOrder.filter(num => num !== groupNumber);
+
     setQuestionStructure(newStructure);
     setQuestionColors(newColors);
+    setQuestionOrder(newOrder);
     setQuestions(generateQuestions(newStructure));
   };
 
