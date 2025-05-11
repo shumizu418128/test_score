@@ -344,6 +344,14 @@ const TestScoringApp = () => {
 
   // 全体のリセット
   const resetAll = () => {
+    setGrammarQuestions(grammarQuestions.map(q => {
+      return {
+        ...q,
+        userAnswer: '',
+        score: 0,
+        isCorrect: false
+      };
+    }));
     setReadingQuestions(readingQuestions.map(q => {
       return {
         ...q,
@@ -536,6 +544,7 @@ const TestScoringApp = () => {
                           value={question.userAnswer}
                           onChange={(e) => handleAnswerChange(question.id, e.target.value, section)}
                           className="w-10 text-center border rounded"
+                          tabIndex={currentNumber}
                         />
                       </td>
                     </tr>
