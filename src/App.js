@@ -625,7 +625,7 @@ const TestScoringApp = () => {
           <div>
             <span className="font-bold">総合得点: </span>
             <span className="text-xl">{totalScore} / {maxPossibleScore}</span>
-            <span className="text-sm ml-2">({Math.round((totalScore / maxPossibleScore) * 60)} / 60)</span>
+            <span className="text-sm ml-2">({Math.round((totalScore / maxPossibleScore) * 180)} / 180)</span>
           </div>
           <div>
             <span className="font-bold">文法: </span>
