@@ -625,18 +625,22 @@ const TestScoringApp = () => {
           <div>
             <span className="font-bold">総合得点: </span>
             <span className="text-xl">{totalScore} / {maxPossibleScore}</span>
+            <span className="text-sm ml-2">({Math.round((totalScore / maxPossibleScore) * 60)} / 60)</span>
           </div>
           <div>
             <span className="font-bold">文法: </span>
             <span className="text-xl">{grammarScore} / {grammarMaxScore}</span>
+            <span className="text-sm ml-2">({Math.round((grammarScore / grammarMaxScore) * 60)} / 60)</span>
           </div>
           <div>
             <span className="font-bold">読解: </span>
             <span className="text-xl">{readingScore} / {readingMaxScore}</span>
+            <span className="text-sm ml-2">({Math.round((readingScore / readingMaxScore) * 60)} / 60)</span>
           </div>
           <div>
             <span className="font-bold">聴解: </span>
             <span className="text-xl">{listeningScore} / {listeningMaxScore}</span>
+            <span className="text-sm ml-2">({Math.round((listeningScore / listeningMaxScore) * 60)} / 60)</span>
           </div>
         </div>
 
