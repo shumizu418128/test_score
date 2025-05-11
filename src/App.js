@@ -397,6 +397,7 @@ const TestScoringApp = () => {
                       <input
                         type="number"
                         min="1"
+                        max="4"
                         value={question.points}
                         onChange={(e) => handlePointsChange(question.id, e.target.value, section)}
                         className="w-16 text-center border rounded"
