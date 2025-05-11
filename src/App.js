@@ -72,19 +72,23 @@ const TestScoringApp = () => {
       for (let i = 0; i < count; i++) {
         // デフォルトの配点を設定
         let defaultPoints = 1;
-        if (section === 'reading') {
-          if ([3, 6, 10].includes(groupNum)) {
+        if (section === 'listening') {
+          if ([1, 3, 5].includes(groupNum)) {
+            defaultPoints = 3;
+          } else if (groupNum === 2) {
+            defaultPoints = 2;
+          }
+        } else if (section === 'grammar') {
+          if ([3, 6].includes(groupNum)) {
+            defaultPoints = 2;
+          }
+        } else if (section === 'reading') {
+          if (groupNum === 10) {
             defaultPoints = 2;
           } else if ([11, 12, 13].includes(groupNum)) {
             defaultPoints = 3;
           } else if (groupNum === 14) {
             defaultPoints = 4;
-          }
-        } else if (section === 'listening') {
-          if ([1, 3, 5].includes(groupNum)) {
-            defaultPoints = 3;
-          } else if (groupNum === 2) {
-            defaultPoints = 2;
           }
         }
 
@@ -193,12 +197,14 @@ const TestScoringApp = () => {
 
     // 更新された問題構成
     const newStructure = {
-      ...(section === 'reading' ? readingStructure : listeningStructure),
+      ...(section === 'reading' ? readingStructure : section === 'grammar' ? grammarStructure : listeningStructure),
       [groupNumber]: numValue
     };
 
     if (section === 'reading') {
       setReadingStructure(newStructure);
+    } else if (section === 'grammar') {
+      setGrammarStructure(newStructure);
     } else {
       setListeningStructure(newStructure);
     }
@@ -208,7 +214,7 @@ const TestScoringApp = () => {
 
     // 既存の回答と正解をできるだけ保持
     const updatedQuestions = newQuestions.map(newQ => {
-      const existingQ = (section === 'reading' ? readingQuestions : listeningQuestions).find(q =>
+      const existingQ = (section === 'reading' ? readingQuestions : section === 'grammar' ? grammarQuestions : listeningQuestions).find(q =>
         q.number === newQ.number && q.subNumber === newQ.subNumber
       );
 
@@ -227,6 +233,8 @@ const TestScoringApp = () => {
 
     if (section === 'reading') {
       setReadingQuestions(updatedQuestions);
+    } else if (section === 'grammar') {
+      setGrammarQuestions(updatedQuestions);
     } else {
       setListeningQuestions(updatedQuestions);
     }
@@ -234,29 +242,49 @@ const TestScoringApp = () => {
 
   // 大問の追加
   const addQuestionGroup = (section) => {
-    const nextGroupNumber = Math.max(...Object.keys(section === 'reading' ? readingStructure : listeningStructure).map(Number)) + 1;
+    const nextGroupNumber = Math.max(...Object.keys(section === 'reading' ? readingStructure : section === 'grammar' ? grammarStructure : listeningStructure).map(Number)) + 1;
     const newStructure = {
-      ...(section === 'reading' ? readingStructure : listeningStructure),
+      ...(section === 'reading' ? readingStructure : section === 'grammar' ? grammarStructure : listeningStructure),
       [nextGroupNumber]: 5
     };
 
     if (section === 'reading') {
       setReadingStructure(newStructure);
+    } else if (section === 'grammar') {
+      setGrammarStructure(newStructure);
     } else {
       setListeningStructure(newStructure);
     }
-    setReadingColors({
-      ...readingColors,
-      [nextGroupNumber]: getColorByIndex(Object.keys(newStructure).length - 1)
-    });
-    setListeningColors({
-      ...listeningColors,
-      [nextGroupNumber]: getColorByIndex(Object.keys(newStructure).length - 1)
-    });
-    setReadingOrder([...readingOrder, nextGroupNumber]);
-    setListeningOrder([...listeningOrder, nextGroupNumber]);
+
+    if (section === 'reading') {
+      setReadingColors({
+        ...readingColors,
+        [nextGroupNumber]: getColorByIndex(Object.keys(newStructure).length - 1)
+      });
+    } else if (section === 'grammar') {
+      setGrammarColors({
+        ...grammarColors,
+        [nextGroupNumber]: getColorByIndex(Object.keys(newStructure).length - 1)
+      });
+    } else {
+      setListeningColors({
+        ...listeningColors,
+        [nextGroupNumber]: getColorByIndex(Object.keys(newStructure).length - 1)
+      });
+    }
+
+    if (section === 'reading') {
+      setReadingOrder([...readingOrder, nextGroupNumber]);
+    } else if (section === 'grammar') {
+      setGrammarOrder([...grammarOrder, nextGroupNumber]);
+    } else {
+      setListeningOrder([...listeningOrder, nextGroupNumber]);
+    }
+
     if (section === 'reading') {
       setReadingQuestions(generateQuestions(newStructure, 'reading'));
+    } else if (section === 'grammar') {
+      setGrammarQuestions(generateQuestions(newStructure, 'grammar'));
     } else {
       setListeningQuestions(generateQuestions(newStructure, 'listening'));
     }
@@ -264,30 +292,47 @@ const TestScoringApp = () => {
 
   // 大問の削除
   const removeQuestionGroup = (groupNumber, section) => {
-    if (Object.keys(section === 'reading' ? readingStructure : listeningStructure).length <= 1) {
+    if (Object.keys(section === 'reading' ? readingStructure : section === 'grammar' ? grammarStructure : listeningStructure).length <= 1) {
       return;
     }
 
-    const newStructure = { ...(section === 'reading' ? readingStructure : listeningStructure) };
+    const newStructure = { ...(section === 'reading' ? readingStructure : section === 'grammar' ? grammarStructure : listeningStructure) };
     delete newStructure[groupNumber];
 
-    const newColors = { ...(section === 'reading' ? readingColors : listeningColors) };
+    const newColors = { ...(section === 'reading' ? readingColors : section === 'grammar' ? grammarColors : listeningColors) };
     delete newColors[groupNumber];
 
     // questionOrderから削除する大問番号を除外
-    const newOrder = (section === 'reading' ? readingOrder : listeningOrder).filter(num => num !== groupNumber);
+    const newOrder = (section === 'reading' ? readingOrder : section === 'grammar' ? grammarOrder : listeningOrder).filter(num => num !== groupNumber);
 
     if (section === 'reading') {
       setReadingStructure(newStructure);
+    } else if (section === 'grammar') {
+      setGrammarStructure(newStructure);
     } else {
       setListeningStructure(newStructure);
     }
-    setReadingColors(newColors);
-    setListeningColors(newColors);
-    setReadingOrder(newOrder);
-    setListeningOrder(newOrder);
+
+    if (section === 'reading') {
+      setReadingColors(newColors);
+    } else if (section === 'grammar') {
+      setGrammarColors(newColors);
+    } else {
+      setListeningColors(newColors);
+    }
+
+    if (section === 'reading') {
+      setReadingOrder(newOrder);
+    } else if (section === 'grammar') {
+      setGrammarOrder(newOrder);
+    } else {
+      setListeningOrder(newOrder);
+    }
+
     if (section === 'reading') {
       setReadingQuestions(generateQuestions(newStructure, 'reading'));
+    } else if (section === 'grammar') {
+      setGrammarQuestions(generateQuestions(newStructure, 'grammar'));
     } else {
       setListeningQuestions(generateQuestions(newStructure, 'listening'));
     }
@@ -359,11 +404,13 @@ const TestScoringApp = () => {
 
   // 大問の並び替え
   const moveQuestionGroup = (fromIndex, toIndex, section) => {
-    const newOrder = [...(section === 'reading' ? readingOrder : listeningOrder)];
+    const newOrder = [...(section === 'reading' ? readingOrder : section === 'grammar' ? grammarOrder : listeningOrder)];
     const [movedItem] = newOrder.splice(fromIndex, 1);
     newOrder.splice(toIndex, 0, movedItem);
     if (section === 'reading') {
       setReadingOrder(newOrder);
+    } else if (section === 'grammar') {
+      setGrammarOrder(newOrder);
     } else {
       setListeningOrder(newOrder);
     }
@@ -399,7 +446,7 @@ const TestScoringApp = () => {
 
   // 大問ごとの合計点を計算する関数
   const calculateGroupScore = (groupNumber, section) => {
-    const questions = section === 'reading' ? readingQuestions : listeningQuestions;
+    const questions = section === 'reading' ? readingQuestions : section === 'grammar' ? grammarQuestions : listeningQuestions;
     return questions
       .filter(q => q.number === groupNumber)
       .reduce((sum, q) => sum + q.score, 0);
@@ -407,88 +454,98 @@ const TestScoringApp = () => {
 
   // 大問ごとの最大点を計算する関数
   const calculateGroupMaxScore = (groupNumber, section) => {
-    const questions = section === 'reading' ? readingQuestions : listeningQuestions;
+    const questions = section === 'reading' ? readingQuestions : section === 'grammar' ? grammarQuestions : listeningQuestions;
     return questions
       .filter(q => q.number === groupNumber)
       .reduce((sum, q) => sum + q.points, 0);
   };
 
   // 問題表のコンポーネント
-  const QuestionTable = ({ groups, order, colors, section }) => (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse">
-        <thead>
-          <tr className="bg-gray-200">
-            <th className="border px-2 py-2">問題</th>
-            <th className="border px-2 py-2">番号</th>
-            <th className="border px-2 py-2">配点</th>
-            <th className="border px-2 py-2">正解</th>
-            <th className="border px-2 py-2">回答</th>
-          </tr>
-        </thead>
-        <tbody>
-          {(() => {
-            let globalQuestionNumber = 1;
-            return order.map((groupNumber, index) => (
-              groups[groupNumber].map((question, qIndex) => {
-                const currentNumber = section === 'reading' ? (groupNumber + 1) : (section === 'grammar' ? globalQuestionNumber++ : qIndex + 1);
-                return (
-                  <tr
-                    key={question.id}
-                    className={question.isCorrect ? 'bg-green-100' : (question.userAnswer !== '' ? 'bg-red-100' : '')}
-                  >
-                    {qIndex === 0 && (
-                      <td
-                        className="border px-2 py-2 text-center"
-                        rowSpan={groups[groupNumber].length}
-                        style={{ backgroundColor: colors[groupNumber] }}
-                      >
-                        問題 {section === 'reading' ? (groupNumber + 1) : groupNumber}
-                        <div className="text-sm mt-1">
-                          {calculateGroupScore(groupNumber, section)} / {calculateGroupMaxScore(groupNumber, section)}点
-                        </div>
+  const QuestionTable = ({ groups, order, colors, section }) => {
+    // セクションごとの開始番号を設定
+    let startNumber = 1;
+    if (section === 'reading') {
+      startNumber = grammarQuestions.length + 1;
+    } else if (section === 'listening') {
+      startNumber = grammarQuestions.length + readingQuestions.length + 1;
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="border px-2 py-2">問題</th>
+              <th className="border px-2 py-2">番号</th>
+              <th className="border px-2 py-2">配点</th>
+              <th className="border px-2 py-2">正解</th>
+              <th className="border px-2 py-2">回答</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(() => {
+              let globalQuestionNumber = startNumber;
+              return order.map((groupNumber, index) => (
+                groups[groupNumber].map((question, qIndex) => {
+                  const currentNumber = section === 'reading' ? globalQuestionNumber++ : (section === 'grammar' ? globalQuestionNumber++ : qIndex + 1);
+                  return (
+                    <tr
+                      key={question.id}
+                      className={question.isCorrect ? 'bg-green-100' : (question.userAnswer !== '' ? 'bg-red-100' : '')}
+                    >
+                      {qIndex === 0 && (
+                        <td
+                          className="border px-2 py-2 text-center"
+                          rowSpan={groups[groupNumber].length}
+                          style={{ backgroundColor: colors[groupNumber] }}
+                        >
+                          問題 {groupNumber}
+                          <div className="text-sm mt-1">
+                            {calculateGroupScore(groupNumber, section)} / {calculateGroupMaxScore(groupNumber, section)}点
+                          </div>
+                        </td>
+                      )}
+                      <td className="border px-2 py-2 text-center">{currentNumber}</td>
+                      <td className="border px-2 py-2 text-center">
+                        <input
+                          type="number"
+                          min="1"
+                          max="4"
+                          value={question.points}
+                          onChange={(e) => handlePointsChange(question.id, e.target.value, section)}
+                          className="w-16 text-center border rounded"
+                        />
                       </td>
-                    )}
-                    <td className="border px-2 py-2 text-center">{currentNumber}</td>
-                    <td className="border px-2 py-2 text-center">
-                      <input
-                        type="number"
-                        min="1"
-                        max="4"
-                        value={question.points}
-                        onChange={(e) => handlePointsChange(question.id, e.target.value, section)}
-                        className="w-16 text-center border rounded"
-                      />
-                    </td>
-                    <td className="border px-2 py-2 text-center">
-                      <input
-                        type="number"
-                        min="1"
-                        max="4"
-                        value={question.correctAnswer}
-                        onChange={(e) => handleCorrectAnswerChange(question.id, e.target.value, section)}
-                        className="w-10 text-center border rounded"
-                      />
-                    </td>
-                    <td className="border px-2 py-2 text-center">
-                      <input
-                        type="number"
-                        min="1"
-                        max="4"
-                        value={question.userAnswer}
-                        onChange={(e) => handleAnswerChange(question.id, e.target.value, section)}
-                        className="w-10 text-center border rounded"
-                      />
-                    </td>
-                  </tr>
-                );
-              })
-            ));
-          })()}
-        </tbody>
-      </table>
-    </div>
-  );
+                      <td className="border px-2 py-2 text-center">
+                        <input
+                          type="number"
+                          min="1"
+                          max="4"
+                          value={question.correctAnswer}
+                          onChange={(e) => handleCorrectAnswerChange(question.id, e.target.value, section)}
+                          className="w-10 text-center border rounded"
+                        />
+                      </td>
+                      <td className="border px-2 py-2 text-center">
+                        <input
+                          type="number"
+                          min="1"
+                          max="4"
+                          value={question.userAnswer}
+                          onChange={(e) => handleAnswerChange(question.id, e.target.value, section)}
+                          className="w-10 text-center border rounded"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })
+              ));
+            })()}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
 
   // 問題管理画面のコンポーネント
   const QuestionManager = () => (
