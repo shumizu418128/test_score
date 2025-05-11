@@ -480,6 +480,9 @@ const TestScoringApp = () => {
       startNumber = grammarQuestions.length + readingQuestions.length + 1;
     }
 
+    // 全問題の回答欄の通し番号を計算
+    let globalAnswerIndex = 1;
+
     return (
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
@@ -518,33 +521,48 @@ const TestScoringApp = () => {
                       <td className="border px-2 py-2 text-center">{currentNumber}</td>
                       <td className="border px-2 py-2 text-center">
                         <input
-                          type="number"
+                          type="text"
                           min="1"
                           max="4"
                           value={question.points}
-                          onChange={(e) => handlePointsChange(question.id, e.target.value, section)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '' || /^[1-4]$/.test(value)) {
+                              handlePointsChange(question.id, value, section);
+                            }
+                          }}
                           className="w-16 text-center border rounded"
                         />
                       </td>
                       <td className="border px-2 py-2 text-center">
                         <input
-                          type="number"
+                          type="text"
                           min="1"
                           max="4"
                           value={question.correctAnswer}
-                          onChange={(e) => handleCorrectAnswerChange(question.id, e.target.value, section)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '' || /^[1-4]$/.test(value)) {
+                              handleCorrectAnswerChange(question.id, value, section);
+                            }
+                          }}
                           className="w-10 text-center border rounded"
                         />
                       </td>
                       <td className="border px-2 py-2 text-center">
                         <input
-                          type="number"
+                          type="text"
                           min="1"
                           max="4"
                           value={question.userAnswer}
-                          onChange={(e) => handleAnswerChange(question.id, e.target.value, section)}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            if (value === '' || /^[1-4]$/.test(value)) {
+                              handleAnswerChange(question.id, value, section);
+                            }
+                          }}
                           className="w-10 text-center border rounded"
-                          tabIndex={currentNumber}
+                          tabIndex={globalAnswerIndex++}
                         />
                       </td>
                     </tr>
