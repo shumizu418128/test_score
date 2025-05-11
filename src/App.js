@@ -142,6 +142,8 @@ const TestScoringApp = () => {
 
     if (section === 'reading') {
       setReadingQuestions(updateQuestions(readingQuestions));
+    } else if (section === 'grammar') {
+      setGrammarQuestions(updateQuestions(grammarQuestions));
     } else {
       setListeningQuestions(updateQuestions(listeningQuestions));
     }
@@ -165,6 +167,8 @@ const TestScoringApp = () => {
 
     if (section === 'reading') {
       setReadingQuestions(updateQuestions(readingQuestions));
+    } else if (section === 'grammar') {
+      setGrammarQuestions(updateQuestions(grammarQuestions));
     } else {
       setListeningQuestions(updateQuestions(listeningQuestions));
     }
@@ -345,8 +349,7 @@ const TestScoringApp = () => {
         ...q,
         userAnswer: '',
         score: 0,
-        isCorrect: false,
-        points: 1
+        isCorrect: false
       };
     }));
     setListeningQuestions(listeningQuestions.map(q => {
@@ -354,8 +357,7 @@ const TestScoringApp = () => {
         ...q,
         userAnswer: '',
         score: 0,
-        isCorrect: false,
-        points: 1
+        isCorrect: false
       };
     }));
   };
