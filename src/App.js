@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './App.css';
 
 const TestScoringApp = () => {
@@ -10,15 +10,23 @@ const TestScoringApp = () => {
   // 問題グループごとの問題数
   const [questionStructure, setQuestionStructure] = useState(defaultQuestionStructure);
 
-  // 問題グループごとの配点
-  const [groupPoints, setGroupPoints] = useState(() => {
-    // 初期値として全ての大問に配点1を設定
-    const points = {};
-    Object.keys(defaultQuestionStructure).forEach(groupNum => {
-      points[groupNum] = 1;
+  // 問題の並び順を管理する状態
+  const [questionOrder, setQuestionOrder] = useState(Object.keys(defaultQuestionStructure).map(Number));
+
+  // 問題グループの色を管理する状態
+  const [questionColors, setQuestionColors] = useState(() => {
+    const colors = {};
+    Object.keys(defaultQuestionStructure).forEach((num, index) => {
+      colors[num] = getColorByIndex(index);
     });
-    return points;
+    return colors;
   });
+
+  // インデックスに基づいて色を生成する関数
+  function getColorByIndex(index) {
+    const hue = (index * 137.5) % 360; // 黄金比を使用して色を分散
+    return `hsl(${hue}, 50%, 90%)`; // 彩度を下げ、明度を上げて優しい色に
+  }
 
   // 問題データの生成関数
   const generateQuestions = (structure) => {
@@ -33,10 +41,11 @@ const TestScoringApp = () => {
           id: idCounter++,
           number: groupNum,
           subNumber: subNumberCounter++,
-          correctAnswer: 1, // デフォルトの正解
+          correctAnswer: 1,
           userAnswer: '',
           score: 0,
-          isCorrect: false
+          isCorrect: false,
+          points: 1
         });
       }
     });
@@ -50,8 +59,6 @@ const TestScoringApp = () => {
   // 総合得点の状態
   const [totalScore, setTotalScore] = useState(0);
   const [maxPossibleScore, setMaxPossibleScore] = useState(0);
-  const [showSettings, setShowSettings] = useState(false);
-  const [editingCorrectAnswers, setEditingCorrectAnswers] = useState(false);
   const [showQuestionManager, setShowQuestionManager] = useState(false);
 
   // 回答が変更されたときの処理
@@ -64,7 +71,7 @@ const TestScoringApp = () => {
           ...q,
           userAnswer: numValue,
           isCorrect: isCorrect,
-          score: isCorrect ? groupPoints[q.number] : 0
+          score: isCorrect ? q.points : 0
         };
       }
       return q;
@@ -81,28 +88,21 @@ const TestScoringApp = () => {
           ...q,
           correctAnswer: numValue,
           isCorrect: isCorrect,
-          score: isCorrect ? groupPoints[q.number] : 0
+          score: isCorrect ? q.points : 0
         };
       }
       return q;
     }));
   };
 
-  // 問題グループの配点が変更されたときの処理
-  const handleGroupPointsChange = (groupNumber, value) => {
+  // 問題の配点が変更されたときの処理
+  const handlePointsChange = (id, value) => {
     const numValue = value === '' ? 0 : parseInt(value, 10);
-
-    // 特定の問題グループの配点を更新
-    setGroupPoints({
-      ...groupPoints,
-      [groupNumber]: numValue
-    });
-
-    // 配点が変わったら得点も再計算
     setQuestions(questions.map(q => {
-      if (q.number === parseInt(groupNumber)) {
+      if (q.id === id) {
         return {
           ...q,
+          points: numValue,
           score: q.isCorrect ? numValue : 0
         };
       }
@@ -149,46 +149,34 @@ const TestScoringApp = () => {
 
   // 大問の追加
   const addQuestionGroup = () => {
-    // 次の大問番号を決定
     const nextGroupNumber = Math.max(...Object.keys(questionStructure).map(Number)) + 1;
-
-    // 問題構成を更新
     const newStructure = {
       ...questionStructure,
-      [nextGroupNumber]: 5 // デフォルトで5問
+      [nextGroupNumber]: 5
     };
 
     setQuestionStructure(newStructure);
-
-    // 配点も更新
-    setGroupPoints({
-      ...groupPoints,
-      [nextGroupNumber]: 1 // デフォルト配点1
+    setQuestionColors({
+      ...questionColors,
+      [nextGroupNumber]: getColorByIndex(Object.keys(newStructure).length - 1)
     });
-
-    // 問題データを再生成
     setQuestions(generateQuestions(newStructure));
   };
 
   // 大問の削除
   const removeQuestionGroup = (groupNumber) => {
-    // 少なくとも1つの大問は残す
     if (Object.keys(questionStructure).length <= 1) {
       return;
     }
 
-    // 問題構成からこの大問を削除
     const newStructure = { ...questionStructure };
     delete newStructure[groupNumber];
 
-    // 配点からも削除
-    const newGroupPoints = { ...groupPoints };
-    delete newGroupPoints[groupNumber];
+    const newColors = { ...questionColors };
+    delete newColors[groupNumber];
 
     setQuestionStructure(newStructure);
-    setGroupPoints(newGroupPoints);
-
-    // 問題データを再生成
+    setQuestionColors(newColors);
     setQuestions(generateQuestions(newStructure));
   };
 
@@ -199,7 +187,8 @@ const TestScoringApp = () => {
         ...q,
         userAnswer: '',
         score: 0,
-        isCorrect: false
+        isCorrect: false,
+        points: 1
       };
     }));
   };
@@ -207,15 +196,11 @@ const TestScoringApp = () => {
   // デフォルト問題構成に戻す
   const resetToDefault = () => {
     setQuestionStructure(defaultQuestionStructure);
-
-    // 配点もデフォルトに戻す
-    const defaultPoints = {};
-    Object.keys(defaultQuestionStructure).forEach(groupNum => {
-      defaultPoints[groupNum] = 1;
+    const newColors = {};
+    Object.keys(defaultQuestionStructure).forEach((num, index) => {
+      newColors[num] = getColorByIndex(index);
     });
-    setGroupPoints(defaultPoints);
-
-    // 問題データを再生成
+    setQuestionColors(newColors);
     setQuestions(generateQuestions(defaultQuestionStructure));
   };
 
@@ -224,14 +209,18 @@ const TestScoringApp = () => {
     const calculatedTotal = questions.reduce((sum, q) => sum + q.score, 0);
     setTotalScore(calculatedTotal);
 
-    // 問題グループごとに最大点を計算
-    const maxScore = questions.reduce((sum, q) => {
-      // 各問題の配点をそのグループの配点から取得
-      return sum + groupPoints[q.number];
-    }, 0);
-
+    // 最大点を計算
+    const maxScore = questions.reduce((sum, q) => sum + q.points, 0);
     setMaxPossibleScore(maxScore);
-  }, [questions, groupPoints]);
+  }, [questions]);
+
+  // 大問の並び替え
+  const moveQuestionGroup = (fromIndex, toIndex) => {
+    const newOrder = [...questionOrder];
+    const [movedItem] = newOrder.splice(fromIndex, 1);
+    newOrder.splice(toIndex, 0, movedItem);
+    setQuestionOrder(newOrder);
+  };
 
   // 問題ごとにグループ化
   const questionGroups = questions.reduce((groups, question) => {
@@ -256,15 +245,35 @@ const TestScoringApp = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {Object.entries(questionStructure).map(([groupNumber, count]) => (
-          <div key={groupNumber} className="flex items-center justify-between p-2 border rounded">
-            <span className="font-semibold">問題 {groupNumber}</span>
+      <div className="grid grid-cols-1 gap-3">
+        {questionOrder.map((groupNumber, index) => (
+          <div
+            key={groupNumber}
+            className="flex items-center justify-between p-2 border rounded"
+            style={{ backgroundColor: questionColors[groupNumber] }}
+          >
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => moveQuestionGroup(index, Math.max(0, index - 1))}
+                disabled={index === 0}
+                className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm disabled:opacity-0"
+              >
+                ↑
+              </button>
+              <button
+                onClick={() => moveQuestionGroup(index, Math.min(questionOrder.length - 1, index + 1))}
+                disabled={index === questionOrder.length - 1}
+                className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm disabled:opacity-0"
+              >
+                ↓
+              </button>
+              <span className="font-semibold">問題 {index + 1}</span>
+            </div>
             <div className="flex items-center">
               <input
                 type="number"
                 min="1"
-                value={count}
+                value={questionStructure[groupNumber]}
                 onChange={(e) => handleQuestionCountChange(groupNumber, e.target.value)}
                 className="border border-gray-300 rounded px-2 py-1 w-16 mr-2"
               />
@@ -300,17 +309,10 @@ const TestScoringApp = () => {
 
         <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
           <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            {showSettings ? '設定を閉じる' : '配点設定'}
-          </button>
-
-          <button
             onClick={() => setShowQuestionManager(!showQuestionManager)}
             className="px-3 py-1 bg-purple-500 text-white rounded hover:bg-purple-600"
           >
-            {showQuestionManager ? '問題管理を閉じる' : '問題管理'}
+            {showQuestionManager ? '大問設定を閉じる' : '大問設定'}
           </button>
 
           <button
@@ -321,39 +323,6 @@ const TestScoringApp = () => {
           </button>
         </div>
       </div>
-
-      {showSettings && (
-        <div className="mb-6 p-4 border border-gray-300 rounded-lg">
-          <h2 className="text-lg font-bold mb-2">配点設定</h2>
-
-          <div className="mb-4">
-            <h3 className="text-md font-semibold mb-2">問題ごとの配点:</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-              {Object.keys(groupPoints).sort((a, b) => parseInt(a) - parseInt(b)).map(groupNumber => (
-                <div key={groupNumber} className="flex items-center">
-                  <label className="mr-2">問題{groupNumber}:</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={groupPoints[groupNumber]}
-                    onChange={(e) => handleGroupPointsChange(groupNumber, e.target.value)}
-                    className="border border-gray-300 rounded px-2 py-1 w-16"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex items-center">
-            <button
-              onClick={() => setEditingCorrectAnswers(!editingCorrectAnswers)}
-              className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-            >
-              {editingCorrectAnswers ? '正解編集を終了' : '正解を編集'}
-            </button>
-          </div>
-        </div>
-      )}
 
       {showQuestionManager && <QuestionManager />}
 
@@ -369,47 +338,60 @@ const TestScoringApp = () => {
             </tr>
           </thead>
           <tbody>
-            {Object.keys(questionGroups).sort((a, b) => parseInt(a) - parseInt(b)).map(groupNumber => (
-              questionGroups[groupNumber].map((question, index) => (
-                <tr
-                  key={question.id}
-                  className={question.isCorrect ? 'bg-green-100' : (question.userAnswer !== '' ? 'bg-red-100' : '')}
-                >
-                  {index === 0 && (
-                    <td
-                      className="border px-2 py-2 text-center"
-                      rowSpan={questionGroups[groupNumber].length}
+            {(() => {
+              let globalQuestionNumber = 1;
+              return questionOrder.map((groupNumber, index) => (
+                questionGroups[groupNumber].map((question, qIndex) => {
+                  const currentNumber = globalQuestionNumber++;
+                  return (
+                    <tr
+                      key={question.id}
+                      className={question.isCorrect ? 'bg-green-100' : (question.userAnswer !== '' ? 'bg-red-100' : '')}
                     >
-                      問題 {groupNumber}
-                    </td>
-                  )}
-                  <td className="border px-2 py-2 text-center">{question.subNumber}</td>
-                  <td className="border px-2 py-2 text-center">{groupPoints[question.number]}</td>
-                  <td className="border px-2 py-2 text-center">
-                    {editingCorrectAnswers ? (
-                      <input
-                        type="number"
-                        min="1"
-                        max="4"
-                        value={question.correctAnswer}
-                        onChange={(e) => handleCorrectAnswerChange(question.id, e.target.value)}
-                        className="w-10 text-center border rounded"
-                      />
-                    ) : question.correctAnswer}
-                  </td>
-                  <td className="border px-2 py-2 text-center">
-                    <input
-                      type="number"
-                      min="1"
-                      max="4"
-                      value={question.userAnswer}
-                      onChange={(e) => handleAnswerChange(question.id, e.target.value)}
-                      className="w-10 text-center border rounded"
-                    />
-                  </td>
-                </tr>
-              ))
-            ))}
+                      {qIndex === 0 && (
+                        <td
+                          className="border px-2 py-2 text-center"
+                          rowSpan={questionGroups[groupNumber].length}
+                          style={{ backgroundColor: questionColors[groupNumber] }}
+                        >
+                          問題 {index + 1}
+                        </td>
+                      )}
+                      <td className="border px-2 py-2 text-center">{currentNumber}</td>
+                      <td className="border px-2 py-2 text-center">
+                        <input
+                          type="number"
+                          min="1"
+                          value={question.points}
+                          onChange={(e) => handlePointsChange(question.id, e.target.value)}
+                          className="w-16 text-center border rounded"
+                        />
+                      </td>
+                      <td className="border px-2 py-2 text-center">
+                        <input
+                          type="number"
+                          min="1"
+                          max="4"
+                          value={question.correctAnswer}
+                          onChange={(e) => handleCorrectAnswerChange(question.id, e.target.value)}
+                          className="w-10 text-center border rounded"
+                        />
+                      </td>
+                      <td className="border px-2 py-2 text-center">
+                        <input
+                          type="number"
+                          min="1"
+                          max="4"
+                          value={question.userAnswer}
+                          onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                          className="w-10 text-center border rounded"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })
+              ));
+            })()}
           </tbody>
         </table>
       </div>
