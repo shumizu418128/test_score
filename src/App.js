@@ -357,7 +357,7 @@ const TestScoringApp = () => {
   };
 
   // 問題表のコンポーネント
-  const QuestionTable = ({ questions, groups, order, colors, section }) => (
+  const QuestionTable = ({ groups, order, colors, section }) => (
     <div className="overflow-x-auto">
       <table className="w-full border-collapse">
         <thead>
@@ -435,13 +435,16 @@ const TestScoringApp = () => {
   // 問題管理画面のコンポーネント
   const QuestionManager = () => (
     <div className="mb-6 p-4 border border-gray-300 rounded-lg">
+      <div className="mb-4 text-center">
+        <h2 className="text-2xl font-bold">{activeTab === 'reading' ? '言語知識・読解' : '聴解'}</h2>
+      </div>
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-bold">問題構成の管理</h2>
+        <h2 className="text-lg font-bold">大問設定</h2>
         <button
           onClick={() => resetToDefault(activeTab)}
           className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
         >
-          {activeTab === 'reading' ? '言語知識・読解' : '聴解'}をデフォルトに戻す
+          デフォルトに戻す
         </button>
       </div>
 
@@ -470,6 +473,7 @@ const TestScoringApp = () => {
               <span className="font-semibold">問題 {index + 1}</span>
             </div>
             <div className="flex items-center">
+              <span className="mr-1">問題数</span>
               <input
                 type="number"
                 min="1"
@@ -492,7 +496,7 @@ const TestScoringApp = () => {
         onClick={() => addQuestionGroup(activeTab)}
         className="mt-4 px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
       >
-        {activeTab === 'reading' ? '言語知識・読解' : '聴解'} 問題を追加
+        問題を追加
       </button>
     </div>
   );
