@@ -237,6 +237,20 @@ const TestScoringApp = () => {
     return groups;
   }, {});
 
+  // 大問ごとの合計点を計算する関数
+  const calculateGroupScore = (groupNumber) => {
+    return questions
+      .filter(q => q.number === groupNumber)
+      .reduce((sum, q) => sum + q.score, 0);
+  };
+
+  // 大問ごとの最大点を計算する関数
+  const calculateGroupMaxScore = (groupNumber) => {
+    return questions
+      .filter(q => q.number === groupNumber)
+      .reduce((sum, q) => sum + q.points, 0);
+  };
+
   // 問題管理画面のコンポーネント
   const QuestionManager = () => (
     <div className="mb-6 p-4 border border-gray-300 rounded-lg">
@@ -360,6 +374,9 @@ const TestScoringApp = () => {
                           style={{ backgroundColor: questionColors[groupNumber] }}
                         >
                           問題 {index + 1}
+                          <div className="text-sm mt-1">
+                            {calculateGroupScore(groupNumber)} / {calculateGroupMaxScore(groupNumber)}点
+                          </div>
                         </td>
                       )}
                       <td className="border px-2 py-2 text-center">{currentNumber}</td>
