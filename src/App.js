@@ -295,12 +295,34 @@ const TestScoringApp = () => {
       setListeningOrder([...listeningOrder, nextGroupNumber]);
     }
 
+    // 新しい問題を生成し、既存の回答と正解を保持
+    const newQuestions = generateQuestions(newStructure, section);
+    const existingQuestions = section === 'reading' ? readingQuestions : section === 'grammar' ? grammarQuestions : listeningQuestions;
+
+    const updatedQuestions = newQuestions.map(newQ => {
+      const existingQ = existingQuestions.find(q =>
+        q.number === newQ.number && q.subNumber === newQ.subNumber
+      );
+
+      if (existingQ) {
+        return {
+          ...newQ,
+          correctAnswer: existingQ.correctAnswer,
+          userAnswer: existingQ.userAnswer,
+          isCorrect: existingQ.isCorrect,
+          score: existingQ.score
+        };
+      }
+
+      return newQ;
+    });
+
     if (section === 'reading') {
-      setReadingQuestions(generateQuestions(newStructure, 'reading'));
+      setReadingQuestions(updatedQuestions);
     } else if (section === 'grammar') {
-      setGrammarQuestions(generateQuestions(newStructure, 'grammar'));
+      setGrammarQuestions(updatedQuestions);
     } else {
-      setListeningQuestions(generateQuestions(newStructure, 'listening'));
+      setListeningQuestions(updatedQuestions);
     }
   };
 
@@ -504,8 +526,8 @@ const TestScoringApp = () => {
               <th className="border px-2 py-2">問題</th>
               <th className="border px-2 py-2">番号</th>
               <th className="border px-2 py-2">配点</th>
-              <th className="border px-2 py-2">正解</th>
               <th className="border px-2 py-2">回答</th>
+              <th className="border px-2 py-2">正解</th>
             </tr>
           </thead>
           <tbody>
@@ -548,8 +570,8 @@ const TestScoringApp = () => {
                           type="text"
                           min="1"
                           max="4"
-                          defaultValue={question.correctAnswer}
-                          onBlur={(e) => handleInputConfirm(question.id, e.target.value, 'correctAnswer', section)}
+                          defaultValue={question.userAnswer}
+                          onBlur={(e) => handleInputConfirm(question.id, e.target.value, 'userAnswer', section)}
                           className="w-10 text-center border rounded"
                           tabIndex={globalAnswerIndex++}
                         />
@@ -559,8 +581,8 @@ const TestScoringApp = () => {
                           type="text"
                           min="1"
                           max="4"
-                          defaultValue={question.userAnswer}
-                          onBlur={(e) => handleInputConfirm(question.id, e.target.value, 'userAnswer', section)}
+                          defaultValue={question.correctAnswer}
+                          onBlur={(e) => handleInputConfirm(question.id, e.target.value, 'correctAnswer', section)}
                           className="w-10 text-center border rounded"
                           tabIndex={globalAnswerIndex++}
                         />
