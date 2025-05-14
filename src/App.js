@@ -14,7 +14,7 @@ const TestScoringApp = () => {
 
   // 聴解の問題構成
   const defaultListeningStructure = {
-    1: 6, 2: 5, 3: 5, 4: 11, 5: 4
+    1: 5, 2: 6, 3: 5, 4: 11, 5: 4
   };
 
   // 現在のタブ
@@ -96,7 +96,7 @@ const TestScoringApp = () => {
           id: idCounter++,
           number: groupNum,
           subNumber: subNumberCounter++,
-          correctAnswer: 1,
+          correctAnswer: '',
           userAnswer: '',
           score: 0,
           isCorrect: false,
@@ -358,7 +358,7 @@ const TestScoringApp = () => {
       return {
         ...q,
         userAnswer: '',
-        correctAnswer: 1,
+        correctAnswer: '',
         score: 0,
         isCorrect: false
       };
@@ -367,7 +367,7 @@ const TestScoringApp = () => {
       return {
         ...q,
         userAnswer: '',
-        correctAnswer: 1,
+        correctAnswer: '',
         score: 0,
         isCorrect: false
       };
@@ -376,7 +376,7 @@ const TestScoringApp = () => {
       return {
         ...q,
         userAnswer: '',
-        correctAnswer: 1,
+        correctAnswer: '',
         score: 0,
         isCorrect: false
       };
