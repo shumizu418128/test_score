@@ -1,4 +1,3 @@
-import Cookies from 'js-cookie';
 import { useEffect, useState } from 'react';
 import './App.css';
 
@@ -18,72 +17,43 @@ const TestScoringApp = () => {
     1: 5, 2: 6, 3: 5, 4: 11, 5: 4
   };
 
-  // Cookieからデータを読み込む関数
-  const loadFromCookie = (key, defaultValue) => {
-    try {
-      const savedData = Cookies.get(key);
-      console.log(`Loading ${key} from cookie:`, savedData);
-      if (!savedData) return defaultValue;
-      const parsedData = JSON.parse(savedData);
-      return parsedData;
-    } catch (error) {
-      console.error(`Error loading ${key} from cookie:`, error);
-      return defaultValue;
-    }
-  };
-
-  // データをCookieに保存する関数
-  const saveToCookie = (key, data) => {
-    try {
-      console.log(`Saving ${key} to cookie:`, data);
-      const jsonData = JSON.stringify(data);
-      Cookies.set(key, jsonData, {
-        expires: 365,
-        path: '/',
-        sameSite: 'strict'
-      });
-    } catch (error) {
-      console.error(`Error saving ${key} to cookie:`, error);
-    }
-  };
-
   // 現在のタブ
-  const [activeTab, setActiveTab] = useState(loadFromCookie('activeTab', 'grammar'));
+  const [activeTab, setActiveTab] = useState('grammar');
 
   // 問題グループごとの問題数
-  const [grammarStructure, setGrammarStructure] = useState(() => loadFromCookie('grammarStructure', defaultGrammarStructure));
-  const [readingStructure, setReadingStructure] = useState(() => loadFromCookie('readingStructure', defaultReadingStructure));
-  const [listeningStructure, setListeningStructure] = useState(() => loadFromCookie('listeningStructure', defaultListeningStructure));
+  const [grammarStructure, setGrammarStructure] = useState(defaultGrammarStructure);
+  const [readingStructure, setReadingStructure] = useState(defaultReadingStructure);
+  const [listeningStructure, setListeningStructure] = useState(defaultListeningStructure);
 
   // 問題の並び順を管理する状態
-  const [grammarOrder, setGrammarOrder] = useState(() => loadFromCookie('grammarOrder', Object.keys(defaultGrammarStructure).map(Number)));
-  const [readingOrder, setReadingOrder] = useState(() => loadFromCookie('readingOrder', Object.keys(defaultReadingStructure).map(Number)));
-  const [listeningOrder, setListeningOrder] = useState(() => loadFromCookie('listeningOrder', Object.keys(defaultListeningStructure).map(Number)));
+  const [grammarOrder, setGrammarOrder] = useState(Object.keys(defaultGrammarStructure).map(Number));
+  const [readingOrder, setReadingOrder] = useState(Object.keys(defaultReadingStructure).map(Number));
+  const [listeningOrder, setListeningOrder] = useState(Object.keys(defaultListeningStructure).map(Number));
 
   // 問題グループの色を管理する状態
-  const [grammarColors, setGrammarColors] = useState(() => loadFromCookie('grammarColors', (() => {
+  const [grammarColors, setGrammarColors] = useState((() => {
     const colors = {};
     Object.keys(defaultGrammarStructure).forEach((num, index) => {
       colors[num] = getColorByIndex(index);
     });
     return colors;
-  })()));
+  })());
 
-  const [readingColors, setReadingColors] = useState(() => loadFromCookie('readingColors', (() => {
+  const [readingColors, setReadingColors] = useState((() => {
     const colors = {};
     Object.keys(defaultReadingStructure).forEach((num, index) => {
       colors[num] = getColorByIndex(index);
     });
     return colors;
-  })()));
+  })());
 
-  const [listeningColors, setListeningColors] = useState(() => loadFromCookie('listeningColors', (() => {
+  const [listeningColors, setListeningColors] = useState((() => {
     const colors = {};
     Object.keys(defaultListeningStructure).forEach((num, index) => {
       colors[num] = getColorByIndex(index);
     });
     return colors;
-  })()));
+  })());
 
   // インデックスに基づいて色を生成する関数
   function getColorByIndex(index) {
@@ -139,20 +109,9 @@ const TestScoringApp = () => {
   };
 
   // 問題データの初期状態
-  const [grammarQuestions, setGrammarQuestions] = useState(() => {
-    const savedQuestions = loadFromCookie('grammarQuestions', null);
-    return savedQuestions || generateQuestions(defaultGrammarStructure, 'grammar');
-  });
-
-  const [readingQuestions, setReadingQuestions] = useState(() => {
-    const savedQuestions = loadFromCookie('readingQuestions', null);
-    return savedQuestions || generateQuestions(defaultReadingStructure, 'reading');
-  });
-
-  const [listeningQuestions, setListeningQuestions] = useState(() => {
-    const savedQuestions = loadFromCookie('listeningQuestions', null);
-    return savedQuestions || generateQuestions(defaultListeningStructure, 'listening');
-  });
+  const [grammarQuestions, setGrammarQuestions] = useState(generateQuestions(defaultGrammarStructure, 'grammar'));
+  const [readingQuestions, setReadingQuestions] = useState(generateQuestions(defaultReadingStructure, 'reading'));
+  const [listeningQuestions, setListeningQuestions] = useState(generateQuestions(defaultListeningStructure, 'listening'));
 
   // 総合得点の状態
   const [totalScore, setTotalScore] = useState(0);
@@ -164,63 +123,6 @@ const TestScoringApp = () => {
   const [listeningScore, setListeningScore] = useState(0);
   const [listeningMaxScore, setListeningMaxScore] = useState(0);
   const [showQuestionManager, setShowQuestionManager] = useState(false);
-
-  // データが変更されたときにCookieに保存
-  useEffect(() => {
-    console.log('Active tab changed:', activeTab);
-    saveToCookie('activeTab', activeTab);
-  }, [activeTab]);
-
-  useEffect(() => {
-    console.log('Grammar questions changed:', grammarQuestions);
-    saveToCookie('grammarQuestions', grammarQuestions);
-  }, [grammarQuestions]);
-
-  useEffect(() => {
-    console.log('Reading questions changed:', readingQuestions);
-    saveToCookie('readingQuestions', readingQuestions);
-  }, [readingQuestions]);
-
-  useEffect(() => {
-    console.log('Listening questions changed:', listeningQuestions);
-    saveToCookie('listeningQuestions', listeningQuestions);
-  }, [listeningQuestions]);
-
-  useEffect(() => {
-    saveToCookie('grammarStructure', grammarStructure);
-  }, [grammarStructure]);
-
-  useEffect(() => {
-    saveToCookie('readingStructure', readingStructure);
-  }, [readingStructure]);
-
-  useEffect(() => {
-    saveToCookie('listeningStructure', listeningStructure);
-  }, [listeningStructure]);
-
-  useEffect(() => {
-    saveToCookie('grammarOrder', grammarOrder);
-  }, [grammarOrder]);
-
-  useEffect(() => {
-    saveToCookie('readingOrder', readingOrder);
-  }, [readingOrder]);
-
-  useEffect(() => {
-    saveToCookie('listeningOrder', listeningOrder);
-  }, [listeningOrder]);
-
-  useEffect(() => {
-    saveToCookie('grammarColors', grammarColors);
-  }, [grammarColors]);
-
-  useEffect(() => {
-    saveToCookie('readingColors', readingColors);
-  }, [readingColors]);
-
-  useEffect(() => {
-    saveToCookie('listeningColors', listeningColors);
-  }, [listeningColors]);
 
   // 回答が変更されたときの処理
   const handleAnswerChange = (id, value, section) => {
@@ -241,15 +143,12 @@ const TestScoringApp = () => {
     if (section === 'reading') {
       const updatedQuestions = updateQuestions(readingQuestions);
       setReadingQuestions(updatedQuestions);
-      saveToCookie('readingQuestions', updatedQuestions);
     } else if (section === 'grammar') {
       const updatedQuestions = updateQuestions(grammarQuestions);
       setGrammarQuestions(updatedQuestions);
-      saveToCookie('grammarQuestions', updatedQuestions);
     } else {
       const updatedQuestions = updateQuestions(listeningQuestions);
       setListeningQuestions(updatedQuestions);
-      saveToCookie('listeningQuestions', updatedQuestions);
     }
   };
 
@@ -270,11 +169,14 @@ const TestScoringApp = () => {
         });
 
         if (section === 'reading') {
-          setReadingQuestions(updateQuestions(readingQuestions));
+          const updatedQuestions = updateQuestions(readingQuestions);
+          setReadingQuestions(updatedQuestions);
         } else if (section === 'grammar') {
-          setGrammarQuestions(updateQuestions(grammarQuestions));
+          const updatedQuestions = updateQuestions(grammarQuestions);
+          setGrammarQuestions(updatedQuestions);
         } else {
-          setListeningQuestions(updateQuestions(listeningQuestions));
+          const updatedQuestions = updateQuestions(listeningQuestions);
+          setListeningQuestions(updatedQuestions);
         }
       } else if (field === 'correctAnswer') {
         handleCorrectAnswerChange(id, value, section);
