@@ -1,3 +1,4 @@
+import Cookies from 'js-cookie';
 import { useEffect, useState } from 'react';
 import './App.css';
 
@@ -17,43 +18,54 @@ const TestScoringApp = () => {
     1: 5, 2: 6, 3: 5, 4: 11, 5: 4
   };
 
+  // Cookieからデータを読み込む関数
+  const loadFromCookie = (key, defaultValue) => {
+    const savedData = Cookies.get(key);
+    return savedData ? JSON.parse(savedData) : defaultValue;
+  };
+
+  // データをCookieに保存する関数
+  const saveToCookie = (key, data) => {
+    Cookies.set(key, JSON.stringify(data), { expires: 365 }); // 1年間保存
+  };
+
   // 現在のタブ
-  const [activeTab, setActiveTab] = useState('grammar');
+  const [activeTab, setActiveTab] = useState(loadFromCookie('activeTab', 'grammar'));
 
   // 問題グループごとの問題数
-  const [grammarStructure, setGrammarStructure] = useState(defaultGrammarStructure);
-  const [readingStructure, setReadingStructure] = useState(defaultReadingStructure);
-  const [listeningStructure, setListeningStructure] = useState(defaultListeningStructure);
+  const [grammarStructure, setGrammarStructure] = useState(() => loadFromCookie('grammarStructure', defaultGrammarStructure));
+  const [readingStructure, setReadingStructure] = useState(() => loadFromCookie('readingStructure', defaultReadingStructure));
+  const [listeningStructure, setListeningStructure] = useState(() => loadFromCookie('listeningStructure', defaultListeningStructure));
 
   // 問題の並び順を管理する状態
-  const [grammarOrder, setGrammarOrder] = useState(Object.keys(defaultGrammarStructure).map(Number));
-  const [readingOrder, setReadingOrder] = useState(Object.keys(defaultReadingStructure).map(Number));
-  const [listeningOrder, setListeningOrder] = useState(Object.keys(defaultListeningStructure).map(Number));
+  const [grammarOrder, setGrammarOrder] = useState(() => loadFromCookie('grammarOrder', Object.keys(defaultGrammarStructure).map(Number)));
+  const [readingOrder, setReadingOrder] = useState(() => loadFromCookie('readingOrder', Object.keys(defaultReadingStructure).map(Number)));
+  const [listeningOrder, setListeningOrder] = useState(() => loadFromCookie('listeningOrder', Object.keys(defaultListeningStructure).map(Number)));
 
   // 問題グループの色を管理する状態
-  const [grammarColors, setGrammarColors] = useState(() => {
+  const [grammarColors, setGrammarColors] = useState(() => loadFromCookie('grammarColors', (() => {
     const colors = {};
     Object.keys(defaultGrammarStructure).forEach((num, index) => {
       colors[num] = getColorByIndex(index);
     });
     return colors;
-  });
+  })()));
 
-  const [readingColors, setReadingColors] = useState(() => {
+  const [readingColors, setReadingColors] = useState(() => loadFromCookie('readingColors', (() => {
     const colors = {};
     Object.keys(defaultReadingStructure).forEach((num, index) => {
       colors[num] = getColorByIndex(index);
     });
     return colors;
-  });
+  })()));
 
-  const [listeningColors, setListeningColors] = useState(() => {
+  const [listeningColors, setListeningColors] = useState(() => loadFromCookie('listeningColors', (() => {
     const colors = {};
     Object.keys(defaultListeningStructure).forEach((num, index) => {
       colors[num] = getColorByIndex(index);
     });
     return colors;
-  });
+  })()));
 
   // インデックスに基づいて色を生成する関数
   function getColorByIndex(index) {
@@ -109,9 +121,9 @@ const TestScoringApp = () => {
   };
 
   // 問題データの初期状態
-  const [grammarQuestions, setGrammarQuestions] = useState(() => generateQuestions(defaultGrammarStructure, 'grammar'));
-  const [readingQuestions, setReadingQuestions] = useState(() => generateQuestions(defaultReadingStructure, 'reading'));
-  const [listeningQuestions, setListeningQuestions] = useState(() => generateQuestions(defaultListeningStructure, 'listening'));
+  const [grammarQuestions, setGrammarQuestions] = useState(() => loadFromCookie('grammarQuestions', generateQuestions(defaultGrammarStructure, 'grammar')));
+  const [readingQuestions, setReadingQuestions] = useState(() => loadFromCookie('readingQuestions', generateQuestions(defaultReadingStructure, 'reading')));
+  const [listeningQuestions, setListeningQuestions] = useState(() => loadFromCookie('listeningQuestions', generateQuestions(defaultListeningStructure, 'listening')));
 
   // 総合得点の状態
   const [totalScore, setTotalScore] = useState(0);
@@ -123,6 +135,59 @@ const TestScoringApp = () => {
   const [listeningScore, setListeningScore] = useState(0);
   const [listeningMaxScore, setListeningMaxScore] = useState(0);
   const [showQuestionManager, setShowQuestionManager] = useState(false);
+
+  // データが変更されたときにCookieに保存
+  useEffect(() => {
+    saveToCookie('activeTab', activeTab);
+  }, [activeTab]);
+
+  useEffect(() => {
+    saveToCookie('grammarStructure', grammarStructure);
+  }, [grammarStructure]);
+
+  useEffect(() => {
+    saveToCookie('readingStructure', readingStructure);
+  }, [readingStructure]);
+
+  useEffect(() => {
+    saveToCookie('listeningStructure', listeningStructure);
+  }, [listeningStructure]);
+
+  useEffect(() => {
+    saveToCookie('grammarOrder', grammarOrder);
+  }, [grammarOrder]);
+
+  useEffect(() => {
+    saveToCookie('readingOrder', readingOrder);
+  }, [readingOrder]);
+
+  useEffect(() => {
+    saveToCookie('listeningOrder', listeningOrder);
+  }, [listeningOrder]);
+
+  useEffect(() => {
+    saveToCookie('grammarColors', grammarColors);
+  }, [grammarColors]);
+
+  useEffect(() => {
+    saveToCookie('readingColors', readingColors);
+  }, [readingColors]);
+
+  useEffect(() => {
+    saveToCookie('listeningColors', listeningColors);
+  }, [listeningColors]);
+
+  useEffect(() => {
+    saveToCookie('grammarQuestions', grammarQuestions);
+  }, [grammarQuestions]);
+
+  useEffect(() => {
+    saveToCookie('readingQuestions', readingQuestions);
+  }, [readingQuestions]);
+
+  useEffect(() => {
+    saveToCookie('listeningQuestions', listeningQuestions);
+  }, [listeningQuestions]);
 
   // 回答が変更されたときの処理
   const handleAnswerChange = (id, value, section) => {
