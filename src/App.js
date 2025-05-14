@@ -358,6 +358,7 @@ const TestScoringApp = () => {
       return {
         ...q,
         userAnswer: '',
+        correctAnswer: 1,
         score: 0,
         isCorrect: false
       };
@@ -366,6 +367,7 @@ const TestScoringApp = () => {
       return {
         ...q,
         userAnswer: '',
+        correctAnswer: 1,
         score: 0,
         isCorrect: false
       };
@@ -374,6 +376,7 @@ const TestScoringApp = () => {
       return {
         ...q,
         userAnswer: '',
+        correctAnswer: 1,
         score: 0,
         isCorrect: false
       };
