@@ -149,6 +149,37 @@ const TestScoringApp = () => {
     }
   };
 
+  // 入力確定時の処理
+  const handleInputConfirm = (id, value, field, section) => {
+    if (value === '' || /^[1-4]$/.test(value)) {
+      if (field === 'points') {
+        const numValue = value === '' ? 0 : parseInt(value, 10);
+        const updateQuestions = (questions) => questions.map(q => {
+          if (q.id === id) {
+            return {
+              ...q,
+              points: numValue,
+              score: q.isCorrect ? numValue : 0
+            };
+          }
+          return q;
+        });
+
+        if (section === 'reading') {
+          setReadingQuestions(updateQuestions(readingQuestions));
+        } else if (section === 'grammar') {
+          setGrammarQuestions(updateQuestions(grammarQuestions));
+        } else {
+          setListeningQuestions(updateQuestions(listeningQuestions));
+        }
+      } else if (field === 'correctAnswer') {
+        handleCorrectAnswerChange(id, value, section);
+      } else if (field === 'userAnswer') {
+        handleAnswerChange(id, value, section);
+      }
+    }
+  };
+
   // 正解を編集する処理
   const handleCorrectAnswerChange = (id, value, section) => {
     const numValue = value === '' ? '' : parseInt(value, 10);
@@ -169,27 +200,6 @@ const TestScoringApp = () => {
       setReadingQuestions(updateQuestions(readingQuestions));
     } else if (section === 'grammar') {
       setGrammarQuestions(updateQuestions(grammarQuestions));
-    } else {
-      setListeningQuestions(updateQuestions(listeningQuestions));
-    }
-  };
-
-  // 問題の配点が変更されたときの処理
-  const handlePointsChange = (id, value, section) => {
-    const numValue = value === '' ? 0 : parseInt(value, 10);
-    const updateQuestions = (questions) => questions.map(q => {
-      if (q.id === id) {
-        return {
-          ...q,
-          points: numValue,
-          score: q.isCorrect ? numValue : 0
-        };
-      }
-      return q;
-    });
-
-    if (section === 'reading') {
-      setReadingQuestions(updateQuestions(readingQuestions));
     } else {
       setListeningQuestions(updateQuestions(listeningQuestions));
     }
@@ -524,14 +534,10 @@ const TestScoringApp = () => {
                           type="text"
                           min="1"
                           max="4"
-                          value={question.points}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '' || /^[1-4]$/.test(value)) {
-                              handlePointsChange(question.id, value, section);
-                            }
-                          }}
+                          defaultValue={question.points}
+                          onBlur={(e) => handleInputConfirm(question.id, e.target.value, 'points', section)}
                           className="w-16 text-center border rounded"
+                          tabIndex={globalAnswerIndex++}
                         />
                       </td>
                       <td className="border px-2 py-2 text-center">
@@ -539,14 +545,10 @@ const TestScoringApp = () => {
                           type="text"
                           min="1"
                           max="4"
-                          value={question.correctAnswer}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '' || /^[1-4]$/.test(value)) {
-                              handleCorrectAnswerChange(question.id, value, section);
-                            }
-                          }}
+                          defaultValue={question.correctAnswer}
+                          onBlur={(e) => handleInputConfirm(question.id, e.target.value, 'correctAnswer', section)}
                           className="w-10 text-center border rounded"
+                          tabIndex={globalAnswerIndex++}
                         />
                       </td>
                       <td className="border px-2 py-2 text-center">
@@ -554,13 +556,8 @@ const TestScoringApp = () => {
                           type="text"
                           min="1"
                           max="4"
-                          value={question.userAnswer}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            if (value === '' || /^[1-4]$/.test(value)) {
-                              handleAnswerChange(question.id, value, section);
-                            }
-                          }}
+                          defaultValue={question.userAnswer}
+                          onBlur={(e) => handleInputConfirm(question.id, e.target.value, 'userAnswer', section)}
                           className="w-10 text-center border rounded"
                           tabIndex={globalAnswerIndex++}
                         />
