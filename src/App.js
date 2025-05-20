@@ -129,12 +129,11 @@ const TestScoringApp = () => {
     const numValue = value === '' ? '' : parseInt(value, 10);
     const updateQuestions = (questions) => questions.map(q => {
       if (q.id === id) {
-        const isCorrect = numValue === q.correctAnswer;
         return {
           ...q,
           userAnswer: numValue,
-          isCorrect: isCorrect,
-          score: isCorrect ? q.points : 0
+          isCorrect: false,
+          score: 0
         };
       }
       return q;
@@ -154,6 +153,7 @@ const TestScoringApp = () => {
 
   // 入力確定時の処理
   const handleInputConfirm = (id, value, field, section) => {
+    // 入力値が空または1-4の数字の場合のみ処理を実行
     if (value === '' || /^[1-4]$/.test(value)) {
       if (field === 'points') {
         const numValue = value === '' ? 0 : parseInt(value, 10);
@@ -162,7 +162,7 @@ const TestScoringApp = () => {
             return {
               ...q,
               points: numValue,
-              score: q.isCorrect ? numValue : 0
+              score: 0
             };
           }
           return q;
@@ -179,36 +179,46 @@ const TestScoringApp = () => {
           setListeningQuestions(updatedQuestions);
         }
       } else if (field === 'correctAnswer') {
-        handleCorrectAnswerChange(id, value, section);
+        const numValue = value === '' ? '' : parseInt(value, 10);
+        const updateQuestions = (questions) => questions.map(q => {
+          if (q.id === id) {
+            return {
+              ...q,
+              correctAnswer: numValue,
+              isCorrect: false,
+              score: 0
+            };
+          }
+          return q;
+        });
+
+        if (section === 'reading') {
+          setReadingQuestions(updateQuestions(readingQuestions));
+        } else if (section === 'grammar') {
+          setGrammarQuestions(updateQuestions(grammarQuestions));
+        } else {
+          setListeningQuestions(updateQuestions(listeningQuestions));
+        }
       } else if (field === 'userAnswer') {
         handleAnswerChange(id, value, section);
       }
     }
   };
 
-  // 正解を編集する処理
-  const handleCorrectAnswerChange = (id, value, section) => {
-    const numValue = value === '' ? '' : parseInt(value, 10);
-    const updateQuestions = (questions) => questions.map(q => {
-      if (q.id === id) {
-        const isCorrect = q.userAnswer === numValue;
-        return {
-          ...q,
-          correctAnswer: numValue,
-          isCorrect: isCorrect,
-          score: isCorrect ? q.points : 0
-        };
-      }
-      return q;
+  // 採点処理
+  const gradeTest = () => {
+    const gradeQuestions = (questions) => questions.map(q => {
+      const isCorrect = q.userAnswer === q.correctAnswer;
+      return {
+        ...q,
+        isCorrect: isCorrect,
+        score: isCorrect ? q.points : 0
+      };
     });
 
-    if (section === 'reading') {
-      setReadingQuestions(updateQuestions(readingQuestions));
-    } else if (section === 'grammar') {
-      setGrammarQuestions(updateQuestions(grammarQuestions));
-    } else {
-      setListeningQuestions(updateQuestions(listeningQuestions));
-    }
+    setGrammarQuestions(gradeQuestions(grammarQuestions));
+    setReadingQuestions(gradeQuestions(readingQuestions));
+    setListeningQuestions(gradeQuestions(listeningQuestions));
   };
 
   // 大問の問題数変更
@@ -565,8 +575,8 @@ const TestScoringApp = () => {
                           type="text"
                           min="1"
                           max="4"
-                          defaultValue={question.points}
-                          onBlur={(e) => handleInputConfirm(question.id, e.target.value, 'points', section)}
+                          value={question.points}
+                          onChange={(e) => handleInputConfirm(question.id, e.target.value, 'points', section)}
                           className="w-16 text-center border rounded"
                           tabIndex={globalAnswerIndex++}
                         />
@@ -576,8 +586,8 @@ const TestScoringApp = () => {
                           type="text"
                           min="1"
                           max="4"
-                          defaultValue={question.userAnswer}
-                          onBlur={(e) => handleInputConfirm(question.id, e.target.value, 'userAnswer', section)}
+                          value={question.userAnswer}
+                          onChange={(e) => handleInputConfirm(question.id, e.target.value, 'userAnswer', section)}
                           className="w-10 text-center border rounded"
                           tabIndex={globalAnswerIndex++}
                         />
@@ -587,8 +597,8 @@ const TestScoringApp = () => {
                           type="text"
                           min="1"
                           max="4"
-                          defaultValue={question.correctAnswer}
-                          onBlur={(e) => handleInputConfirm(question.id, e.target.value, 'correctAnswer', section)}
+                          value={question.correctAnswer}
+                          onChange={(e) => handleInputConfirm(question.id, e.target.value, 'correctAnswer', section)}
                           className="w-10 text-center border rounded"
                           tabIndex={globalAnswerIndex++}
                         />
@@ -714,6 +724,13 @@ const TestScoringApp = () => {
             className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
           >
             回答リセット
+          </button>
+
+          <button
+            onClick={gradeTest}
+            className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            採点
           </button>
         </div>
       </div>
