@@ -100,7 +100,8 @@ const TestScoringApp = () => {
           userAnswer: '',
           score: 0,
           isCorrect: false,
-          points: defaultPoints
+          points: defaultPoints,
+          isGraded: false
         });
       }
     });
@@ -133,7 +134,8 @@ const TestScoringApp = () => {
           ...q,
           userAnswer: numValue,
           isCorrect: false,
-          score: 0
+          score: 0,
+          isGraded: false
         };
       }
       return q;
@@ -162,7 +164,8 @@ const TestScoringApp = () => {
             return {
               ...q,
               points: numValue,
-              score: 0
+              score: 0,
+              isGraded: false
             };
           }
           return q;
@@ -186,7 +189,8 @@ const TestScoringApp = () => {
               ...q,
               correctAnswer: numValue,
               isCorrect: false,
-              score: 0
+              score: 0,
+              isGraded: false
             };
           }
           return q;
@@ -208,11 +212,21 @@ const TestScoringApp = () => {
   // 採点処理
   const gradeTest = () => {
     const gradeQuestions = (questions) => questions.map(q => {
+      // 回答または正解が空欄の場合は採点対象外
+      if (q.userAnswer === '' || q.correctAnswer === '') {
+        return {
+          ...q,
+          isCorrect: false,
+          score: 0,
+          isGraded: false
+        };
+      }
       const isCorrect = q.userAnswer === q.correctAnswer;
       return {
         ...q,
         isCorrect: isCorrect,
-        score: isCorrect ? q.points : 0
+        score: isCorrect ? q.points : 0,
+        isGraded: true
       };
     });
 
@@ -398,7 +412,8 @@ const TestScoringApp = () => {
         userAnswer: '',
         correctAnswer: '',
         score: 0,
-        isCorrect: false
+        isCorrect: false,
+        isGraded: false
       };
     }));
     setReadingQuestions(readingQuestions.map(q => {
@@ -407,7 +422,8 @@ const TestScoringApp = () => {
         userAnswer: '',
         correctAnswer: '',
         score: 0,
-        isCorrect: false
+        isCorrect: false,
+        isGraded: false
       };
     }));
     setListeningQuestions(listeningQuestions.map(q => {
@@ -416,7 +432,8 @@ const TestScoringApp = () => {
         userAnswer: '',
         correctAnswer: '',
         score: 0,
-        isCorrect: false
+        isCorrect: false,
+        isGraded: false
       };
     }));
   };
@@ -555,7 +572,7 @@ const TestScoringApp = () => {
                   return (
                     <tr
                       key={question.id}
-                      className={question.isCorrect ? 'bg-green-100' : (question.userAnswer !== '' ? 'bg-red-100' : '')}
+                      className={question.isGraded ? (question.isCorrect ? 'bg-green-100' : 'bg-red-100') : ''}
                     >
                       {qIndex === 0 && (
                         <td
@@ -572,7 +589,7 @@ const TestScoringApp = () => {
                       <td className="border px-2 py-2 text-center">{currentNumber}</td>
                       <td className="border px-2 py-2 text-center">
                         <input
-                          type="text"
+                          type="number"
                           min="1"
                           max="4"
                           value={question.points}
@@ -583,7 +600,7 @@ const TestScoringApp = () => {
                       </td>
                       <td className="border px-2 py-2 text-center">
                         <input
-                          type="text"
+                          type="number"
                           min="1"
                           max="4"
                           value={question.userAnswer}
@@ -594,7 +611,7 @@ const TestScoringApp = () => {
                       </td>
                       <td className="border px-2 py-2 text-center">
                         <input
-                          type="text"
+                          type="number"
                           min="1"
                           max="4"
                           value={question.correctAnswer}
